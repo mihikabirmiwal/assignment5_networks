@@ -21,14 +21,14 @@ enum TDNSType
 
 
 /* Server-wide context */
-/* Maintains DNS entries in a hierarchical manner */
+/* Maintains DNS records in a hierarchical manner */
 /* and per-query contexts for handling iterative queries */
-/* In the assignment, the server can contain only two kinds of entries. */
+/* In the assignment, the server can contain only two kinds of records. */
 /* One contains IP address, and the other points to another nameserver */
 struct TDNSServerContext;
 
 
-/* Results for TDNSParseMsg */
+/* Result for TDNSParseMsg */
 struct TDNSParseResult {
   struct dnsheader *dh; /* parsed dnsheader, you need this in Part 2 */
   uint16_t qtype; /* query type, the value should be one of enum TDNSType values */
@@ -41,10 +41,11 @@ struct TDNSParseResult {
   const char *nsDomain; /* an IP address to the nameserver */
 };
 
-/* Results for TDNSFind function */
+/* Result for TDNSFind function */
 struct TDNSFindResult {
   char serialized[MAX_RESPONSE]; /* a DNS response string based on the search result */
   ssize_t len; /* the response string's length */
+  
   /* Below is for delegation */
   const char *delegate_ip; /* IP to the nameserver to which a server delegates a query */
 };
@@ -60,28 +61,39 @@ struct TDNSServerContext *TDNSInit(void);
 /* Creates a zone for the given domain, zoneurl */
 /* e.g., TDNSCreateZone(ctx, "google.com") */
 void TDNSCreateZone (struct TDNSServerContext *ctx, const char *zoneurl);
-/* Adds either an NS entry or A entry for the subdomain in the zone */
-/* A entry example*/
-/* e.g., TDNSAddEntry(ctx, "google.com", "www", "123.123.123.123", NULL) */
-/* NS entry example */
-/* e.g., TDNSAddEntry(ctx, "google.com", "maps", NULL, "ns.maps.google.com")*/
-void TDNSAddEntry (struct TDNSServerContext *ctx, const char *zoneurl, const char *subdomain, const char *IPv4, const char* NS);
+/* Adds either an NS record or A record for the subdomain in the zone */
+/* A record example*/
+/* e.g., TDNSAddRecord(ctx, "google.com", "www", "123.123.123.123", NULL) */
+/* Below will also implicitly create a maps.google.com zone */
+/* e.g., TDNSAddRecord(ctx, "google.com", "maps", NULL, "ns.maps.google.com")*/
+/* Then you can add an IP for ns.maps.google.com like below */
+/* e.g., TDNSAddRecord(ctx, "maps.google.com", "ns", "111.111.111.111", NULL)*/
+void TDNSAddRecord (struct TDNSServerContext *ctx, const char *zoneurl, const char *subdomain, const char *IPv4, const char* NS);
 
 /* Parses a DNS message and stores the result in `parsed` */
-/* Don't forget to specify the size of the message! */
+/* Returns 0 if the message is a query, 1 if it's a response */
+/* Note: Don't forget to specify the size of the message! */
+/* If the message is a referral response, parsed->nsIP and parsed->nsDomain will contain */
+/* the IP address and domain name for the referred nameserver */
 uint8_t TDNSParseMsg (const char *message, uint64_t size, struct TDNSParseResult *parsed);
-/* Find a DNS entry for the query represented by `parsed` and stores the result in `result`*/
-uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *parsed, struct TDNSFindResult *result);
+
+/* Finds a DNS record for the query represented by `parsed` and stores the result in `result`*/
+/* Returns 0 if it fails to find a corresponding record */
+/* Returns 1 if it finds a corresponding record */
+/* If the record indicates delegation, result->delegate_ip will store */
+/* the IP address to which it delegates the query */uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *parsed, struct TDNSFindResult *result);
 
 /**************/
 /* for Part 2 */
 /**************/
 
-/* Extracts a query from a DNS message */
+/* Extracts a query from a parsed DNS message and stores it in serialized */
+/* Returns size of the serialized query in bytes. */
 /* This is useful when you extract a query from a referral response. */
 ssize_t TDNSGetIterQuery(struct TDNSParseResult *parsed, char *serialized);
 
 /* Puts NS information to a DNS message */
+/* messeage will be updated and the updated length will be returned. */
 /* This should be used when you get the final answer from a nameserver */
 /* to let a client know the trajectory. */
 uint64_t TDNSPutNStoMessage (char *message, uint64_t size, struct TDNSParseResult *parsed, const char* nsIP, const char* nsDomain);

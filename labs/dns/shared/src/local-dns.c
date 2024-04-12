@@ -36,10 +36,10 @@ struct dnsheader {
         unsigned        ra :1;          /* recursion available */
 #endif
                         /* remaining bytes */
-        uint16_t        qdcount;    /* number of question entries */
-        uint16_t        ancount;    /* number of answer entries */
-        uint16_t        nscount;    /* number of authority entries */
-        uint16_t        arcount;    /* number of resource entries */
+        uint16_t        qdcount;    /* number of question records */
+        uint16_t        ancount;    /* number of answer records */
+        uint16_t        nscount;    /* number of authority records */
+        uint16_t        arcount;    /* number of resource records */
 };
 
 /* A few macros that might be useful */
@@ -55,7 +55,7 @@ int main() {
     socklen_t client_len = sizeof(client_addr);
     char buffer[BUFFER_SIZE];
 
-    /* PART2 TODO: Implement a local iterative DNS server for the utexas.edu zone */
+    /* PART2 TODO: Implement a local iterative DNS server */
     
     /* 1. Create an **UDP** socket */
 
@@ -66,23 +66,23 @@ int main() {
     /* This context will be used for future TDNS library function calls */
 
     /* 4. Create the edu zone using TDNSCreateZone() */
-    /* Add the UT nameserver ns.utexas.edu using using TDNSAddEntry() */
-    /* Add an IP address for ns.utexas.edu domain using TDNSAddEntry() */
+    /* Add the UT nameserver ns.utexas.edu using using TDNSAddRecord() */
+    /* Add an IP address for ns.utexas.edu domain using TDNSAddRecord() */
 
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
 
-    /* 6. If it is a query for A, AAAA, NS DNS entry, find the queried entry using TDNSFind() */
+    /* 6. If it is a query for A, AAAA, NS DNS record, find the queried record using TDNSFind() */
     /* You can ignore the other types of queries */
 
-        /* 6-1. If the entry is found and the entry indicates delegation, */
+        /* a. If the record is found and the record indicates delegation, */
         /* send an iterative query to the corresponding nameserver */
         /* You should store a per-query context using putAddrQID() and putNSQID() */
         /* for future response handling */
 
-        /* 6-2 If the entry is found and the entry doesn't indicate delegation, */
+        /* b. If the record is found and the record doesn't indicate delegation, */
         /* send a response back */
 
-        /* 6-3 If the entry is not found, send a response back */
+        /* c. If the record is not found, send a response back */
 
     /* 7. If the message is an authoritative response (i.e., it contains an answer), */
     /* add the NS information to the response and send it to the original client */

@@ -20,7 +20,7 @@ int main() {
     socklen_t client_len = sizeof(client_addr);
     char buffer[BUFFER_SIZE];
 
-    /* PART1 TODO: Implement a DNS authoritative server for the cs.utexas.edu zone */
+    /* PART1 TODO: Implement a DNS nameserver for the cs.utexas.edu zone */
     
     /* 1. Create an **UDP** socket */
 
@@ -31,13 +31,13 @@ int main() {
     /* This context will be used for future TDNS library function calls */
 
     /* 4. Create the cs.utexas.edu zone using TDNSCreateZone() */
-    /* Add an IP address for cs.utexas.edu domain using TDNSAddEntry() */
-    /* Add an IP address for utns.cs.utexas.edu domain using TDNSAddEntry() */
+    /* Add an IP address for cs.utexas.edu domain using TDNSAddRecord() */
+    /* Add an IP address for aquila.cs.utexas.edu domain using TDNSAddRecord() */
 
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
 
-    /* 6. If it is a query for A, AAAA, NS DNS entry */
-    /* find the corresponding entry using TDNSFind() and send the response back */
+    /* 6. If it is a query for A, AAAA, NS DNS record */
+    /* find the corresponding record using TDNSFind() and send the response back */
     /* Otherwise, just ignore it. */
 
     return 0;

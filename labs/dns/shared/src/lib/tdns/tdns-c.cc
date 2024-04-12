@@ -129,7 +129,7 @@ void TDNSCreateZone (struct TDNSServerContext *ctx, const char *zoneurl)
   cout << "Created zone named: " << zoneurl_str << endl;
 }
 
-void TDNSAddEntry(struct TDNSServerContext *ctx, const char *zoneurl, const char *subdomain, const char *IPv4, const char* NS)
+void TDNSAddRecord(struct TDNSServerContext *ctx, const char *zoneurl, const char *subdomain, const char *IPv4, const char* NS)
 {
   DNSName dn, ns;
   string zoneurl_str(zoneurl), subdomain_str(subdomain);
