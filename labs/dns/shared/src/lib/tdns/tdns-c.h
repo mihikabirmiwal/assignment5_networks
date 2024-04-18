@@ -81,19 +81,23 @@ uint8_t TDNSParseMsg (const char *message, uint64_t size, struct TDNSParseResult
 /* Returns 0 if it fails to find a corresponding record */
 /* Returns 1 if it finds a corresponding record */
 /* If the record indicates delegation, result->delegate_ip will store */
-/* the IP address to which it delegates the query */uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *parsed, struct TDNSFindResult *result);
+/* the IP address to which it delegates the query */
+/* If the record indicates delegation, result->delegate_ip (or parsed->nsIP) will store */
+/* the IP address to which it delegates the query */
+/* parsed->nsDomain will store the domain name to which it delegates the query. */
+uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *parsed, struct TDNSFindResult *result);
 
 /**************/
 /* for Part 2 */
 /**************/
 
 /* Extracts a query from a parsed DNS message and stores it in serialized */
-/* Returns size of the serialized query in bytes. */
+/* Returns the size of the serialized query in bytes. */
 /* This is useful when you extract a query from a referral response. */
 ssize_t TDNSGetIterQuery(struct TDNSParseResult *parsed, char *serialized);
 
 /* Puts NS information to a DNS message */
-/* messeage will be updated and the updated length will be returned. */
+/* message will be updated and the updated length will be returned. */
 /* This should be used when you get the final answer from a nameserver */
 /* to let a client know the trajectory. */
 uint64_t TDNSPutNStoMessage (char *message, uint64_t size, struct TDNSParseResult *parsed, const char* nsIP, const char* nsDomain);
