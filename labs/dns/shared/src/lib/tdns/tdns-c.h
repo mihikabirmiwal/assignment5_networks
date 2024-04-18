@@ -83,8 +83,6 @@ uint8_t TDNSParseMsg (const char *message, uint64_t size, struct TDNSParseResult
 /* Finds a DNS record for the query represented by `parsed` and stores the result in `result`*/
 /* Returns 0 if it fails to find a corresponding record */
 /* Returns 1 if it finds a corresponding record */
-/* If the record indicates delegation, result->delegate_ip will store */
-/* the IP address to which it delegates the query */
 /* If the record indicates delegation, parsed->nsIP will store */
 /* the IP address to which it delegates the query */
 /* parsed->nsDomain will store the domain name to which it delegates the query. */
