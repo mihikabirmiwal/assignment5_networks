@@ -21,25 +21,49 @@ int main() {
     char buffer[BUFFER_SIZE];
 
     /* PART1 TODO: Implement a DNS nameserver for the utexas.edu zone */
-    
+
     /* 1. Create an **UDP** socket */
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
     /* 2. Initialize server address (INADDR_ANY, DNS_PORT) */
     /* Then bind the socket to it */
-
+    bzero((char*)&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(DNS_PORT);
+    bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     /* 3. Initialize a server context using TDNSInit() */
     /* This context will be used for future TDNS library function calls */
-
+    server_context = TDNSInit();
     /* 4. Create the utexas.edu zone using TDNSCreateZone() */
+    utexas_zone = TDNSCreateZone(server_context, "utexas.edu");
     /* Add an IP address for www.utexas.edu domain using TDNSAddRecord() */
+    TDNSAddRecord(server_context, "utexas.edu", "www", "40.0.0.10", NULL)
     /* Add the UTCS nameserver ns.cs.utexas.edu using using TDNSAddRecord() */
+    /* implicitly creates cs.utexas.edu zone*/
+    TDNSAddRecord(server_context, "utexas.edu", "ns", NULL, "ns.utexas.edu")
     /* Add an IP address for ns.cs.utexas.edu domain using TDNSAddRecord() */
-
+    TDNSAddRecord(server_context, "utexas.edu", "ns", "40.0.0.20", NULL)
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
+    while (1) {
+        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 
+                0, (struct sockaddr*)&client_addr,&client_len); //receive message from server 
+        buffer[n] = '\0';
+        TDNSParseResult* parsed = malloc(sizeof(TDNSParseResult()));
+        TDNSParseMsg(buffer, BUFFER_SIZE, parsed);
 
-    /* 6. If it is a query for A, AAAA, NS DNS record */
-    /* find the corresponding record using TDNSFind() and send the response back */
-    /* Otherwise, just ignore it. */
+         /* 6. If it is a query for A, AAAA, NS DNS record */
+        /* find the corresponding record using TDNSFind() and send the response back */
+        /* Otherwise, just ignore it. */
+        if (parsed.qtype == TDNSType.A || parsed.qtype == TDNSType.AAAA || parsed.qtype == TDNSType.NS) {
+            TDNSFindResult* found = malloc(sizeof(TDNSFindResult()));
+            TDNSFind(server_context, parsed, found);
+
+            sendto(sockfd, found.serialized, found.len, 0, 
+                (struct sockaddr*)&client_addr, client_len); 
+        }
+    }
+   
 
     return 0;
 }
