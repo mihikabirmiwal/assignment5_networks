@@ -34,32 +34,31 @@ int main() {
     bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     /* 3. Initialize a server context using TDNSInit() */
     /* This context will be used for future TDNS library function calls */
-    server_context = TDNSInit();
+    struct TDNSServerContext* server_context = TDNSInit();
     /* 4. Create the utexas.edu zone using TDNSCreateZone() */
-    utexas_zone = TDNSCreateZone(server_context, "utexas.edu");
+    TDNSCreateZone(server_context, "utexas.edu");
     /* Add an IP address for www.utexas.edu domain using TDNSAddRecord() */
-    TDNSAddRecord(server_context, "utexas.edu", "www", "40.0.0.10", NULL)
+    TDNSAddRecord(server_context, "utexas.edu", "www", "40.0.0.10", NULL);
     /* Add the UTCS nameserver ns.cs.utexas.edu using using TDNSAddRecord() */
     /* implicitly creates cs.utexas.edu zone*/
-    TDNSAddRecord(server_context, "utexas.edu", "ns", NULL, "ns.utexas.edu")
+    TDNSAddRecord(server_context, "utexas.edu", "cs", NULL, "ns.cs.utexas.edu");
     /* Add an IP address for ns.cs.utexas.edu domain using TDNSAddRecord() */
-    TDNSAddRecord(server_context, "utexas.edu", "ns", "40.0.0.20", NULL)
+    TDNSAddRecord(server_context, "cs.utexas.edu", "ns", "50.0.0.30", NULL);
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
     while (1) {
-        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 
-                0, (struct sockaddr*)&client_addr,&client_len); //receive message from server 
+        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, &client_len); //receive message from server 
         buffer[n] = '\0';
-        TDNSParseResult* parsed = malloc(sizeof(TDNSParseResult()));
+        struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
         TDNSParseMsg(buffer, BUFFER_SIZE, parsed);
 
-         /* 6. If it is a query for A, AAAA, NS DNS record */
+        /* 6. If it is a query for A, AAAA, NS DNS record */
         /* find the corresponding record using TDNSFind() and send the response back */
         /* Otherwise, just ignore it. */
-        if (parsed.qtype == TDNSType.A || parsed.qtype == TDNSType.AAAA || parsed.qtype == TDNSType.NS) {
-            TDNSFindResult* found = malloc(sizeof(TDNSFindResult()));
+        if (parsed->qtype == A || parsed->qtype == AAAA || parsed->qtype == NS) {
+            struct TDNSFindResult* found = malloc(sizeof(struct TDNSFindResult));
             TDNSFind(server_context, parsed, found);
 
-            sendto(sockfd, found.serialized, found.len, 0, 
+            sendto(sockfd, found->serialized, found->len, 0, 
                 (struct sockaddr*)&client_addr, client_len); 
         }
     }
