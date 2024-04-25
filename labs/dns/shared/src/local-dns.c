@@ -93,16 +93,16 @@ int main() {
                         /* for future response handling */
                         if (TDNSFind(server_context, parsed, found)){
                                 if (parsed->nsIP != NULL){
-                                        putAddrQID(server_context, parsed->dnsheader->id, (struct sockaddr *)&server_addr);
-                                        putNSQID(server_context, parsed->dnsheader->id, parsed->nsIP, parsed->nsDomain);
+                                        putAddrQID(server_context, parsed->dh->id, (struct sockaddr *)&server_addr);
+                                        putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
                                         ssize_t serialized_query_size = TDNSGetIterQuery(parsed, found->serialized);
                                         // TDNSFind(server_context, parsed, found)
                                         sendto(sockfd, found->serialized, serialized_query_size, 0, (struct sockaddr*)&parsed->nsDomain, client_len); 
                                 } else {
                                         /* b. If the record is found and the record doesn't indicate delegation, */
                                         /* send a response back */
-                                        delAddrQID(server_context, parsed->dnsheader->id);
-                                        delNSQID(server_context, parsed->dnsheader->id);
+                                        delAddrQID(server_context, parsed->dh->id);
+                                        delNSQID(server_context, parsed->dh->id);
                                         sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len);
                                 } 
 
@@ -121,7 +121,7 @@ int main() {
                         /* You should update a per-query context using putNSQID() */
                         char* serialized = malloc(BUFFER_SIZE);
                         ssize_t serialized_query_size = TDNSGetIterQuery(parsed, serialized);
-                        putNSQID(server_context, parsed->dnsheader->id, parsed->nsIP, parsed->nsDomain);
+                        putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
                 } else {
                         /* 7. If the message is an authoritative response (i.e., it contains an answer), */
                         /* add the NS information to the response and send it to the original client */
@@ -129,14 +129,14 @@ int main() {
                         /* getNSbyQID() and getAddrbyQID() */
                         const char* newIP = malloc(BUFFER_SIZE);
                         const char* newDomain = malloc(BUFFER_SIZE);
-                        getNSbyQID(server_context, parsed->dnsheader->id, newIP, newDomain);
-                        getAddrbyQID(server_context, parsed->dnsheader->id, (struct sockaddr *)&client_addr);
+                        getNSbyQID(server_context, parsed->dh->id, newIP, newDomain);
+                        getAddrbyQID(server_context, parsed->dh->id, (struct sockaddr *)&client_addr);
                         char* newMessage = malloc(BUFFER_SIZE);
                         /* You can add the NS information to the response using TDNSPutNStoMessage() */
                         TDNSPutNStoMessage(newMessage, BUFFER_SIZE, parsed, newIP, newDomain); // TOCHECK ip and domain NULL?
                         /* Delete a per-query context using delAddrQID() and putNSQID() */
-                        delAddrQID(server_context, parsed->dnsheader->id);
-                        delNSQID(server_context, parsed->dnsheader->id);
+                        delAddrQID(server_context, parsed->dh->id);
+                        delNSQID(server_context, parsed->dh->id);
                 }
                 
         }     
