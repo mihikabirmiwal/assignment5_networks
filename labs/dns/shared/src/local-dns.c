@@ -58,44 +58,63 @@ int main() {
     /* PART2 TODO: Implement a local iterative DNS server */
     
     /* 1. Create an **UDP** socket */
-
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     /* 2. Initialize server address (INADDR_ANY, DNS_PORT) */
     /* Then bind the socket to it */
-
+    bzero((char*)&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(DNS_PORT);
+    bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
     /* 3. Initialize a server context using TDNSInit() */
     /* This context will be used for future TDNS library function calls */
-
+        struct TDNSServerContext* server_context = TDNSInit();
     /* 4. Create the edu zone using TDNSCreateZone() */
+    TDNSCreateZone(server_context, "utexas.edu");
     /* Add the UT nameserver ns.utexas.edu using using TDNSAddRecord() */
     /* Add an IP address for ns.utexas.edu domain using TDNSAddRecord() */
-
+    TDNSAddRecord(server_context, "utexas.edu", "ns", NULL, "ns.utexas.edu");
+    TDNSAddRecord(server_context, "utexas.edu", "ns", "40.0.0.20", NULL);
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
+    while (1) {
+        int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, &client_len); //receive message from server 
+        buffer[n] = '\0';
+        struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
+        TDNSParseMsg(buffer, BUFFER_SIZE, parsed);
 
-    /* 6. If it is a query for A, AAAA, NS DNS record, find the queried record using TDNSFind() */
-    /* You can ignore the other types of queries */
+        /* 6. If it is a query for A, AAAA, NS DNS record, find the queried record using TDNSFind() */
+        /* You can ignore the other types of queries */
+        if (parsed->qtype == A || parsed->qtype == AAAA || parsed->qtype == NS) {
+            struct TDNSFindResult* found = malloc(sizeof(struct TDNSFindResult));
+            TDNSFind(server_context, parsed, found);
 
-        /* a. If the record is found and the record indicates delegation, */
+            sendto(sockfd, found->serialized, found->len, 0, 
+                (struct sockaddr*)&client_addr, client_len); 
+        }
+
+                /* a. If the record is found and the record indicates delegation, */
+                /* send an iterative query to the corresponding nameserver */
+                /* You should store a per-query context using putAddrQID() and putNSQID() */
+                /* for future response handling */
+
+                /* b. If the record is found and the record doesn't indicate delegation, */
+                /* send a response back */
+
+                /* c. If the record is not found, send a response back */
+
+        /* 7. If the message is an authoritative response (i.e., it contains an answer), */
+        /* add the NS information to the response and send it to the original client */
+        /* You can retrieve the NS and client address information for the response using */
+        /* getNSbyQID() and getAddrbyQID() */
+        /* You can add the NS information to the response using TDNSPutNStoMessage() */
+        /* Delete a per-query context using delAddrQID() and putNSQID() */
+
+        /* 7-1. If the message is a non-authoritative response */
+        /* (i.e., it contains referral to another nameserver) */
         /* send an iterative query to the corresponding nameserver */
-        /* You should store a per-query context using putAddrQID() and putNSQID() */
-        /* for future response handling */
-
-        /* b. If the record is found and the record doesn't indicate delegation, */
-        /* send a response back */
-
-        /* c. If the record is not found, send a response back */
-
-    /* 7. If the message is an authoritative response (i.e., it contains an answer), */
-    /* add the NS information to the response and send it to the original client */
-    /* You can retrieve the NS and client address information for the response using */
-    /* getNSbyQID() and getAddrbyQID() */
-    /* You can add the NS information to the response using TDNSPutNStoMessage() */
-    /* Delete a per-query context using delAddrQID() and putNSQID() */
-
-    /* 7-1. If the message is a non-authoritative response */
-    /* (i.e., it contains referral to another nameserver) */
-    /* send an iterative query to the corresponding nameserver */
-    /* You can extract the query from the response using TDNSGetIterQuery() */
-    /* You should update a per-query context using putNSQID() */
+        /* You can extract the query from the response using TDNSGetIterQuery() */
+        /* You should update a per-query context using putNSQID() */
+    }
 
     return 0;
 }
