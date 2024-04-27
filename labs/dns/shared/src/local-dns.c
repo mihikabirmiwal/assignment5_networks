@@ -90,14 +90,16 @@ int main() {
                         /* send an iterative query to the corresponding nameserver */
                         /* You should store a per-query context using putAddrQID() and putNSQID() */
                         /* for future response handling */
-                        printf("before find\n");
+                        printf("[LOCAL] before find\n");
                         if (TDNSFind(server_context, parsed, found)){
-                                printf("after find\n");
+                                printf("[LOCAL] after find\n");
+                                printf("[LOCAL] parsed nsIP: %s\n", parsed->nsIP);
+                                printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
                                 if (parsed->nsIP != NULL){
-                                        printf("found and needs delegation \n");
-                                        printf("parsed nsIP: %s\n", parsed->nsIP);
-                                        printf("parsed nsDomain: %s\n", parsed->nsDomain);
-                                        printf("adding addr and ns per-query context \n");
+                                        printf("[LOCAL] found and needs delegation \n");
+                                        printf("[LOCAL] parsed nsIP: %s\n", parsed->nsIP);
+                                        printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
+                                        printf("[LOCAL] adding addr and ns per-query context \n");
                                         putAddrQID(server_context, parsed->dh->id, (struct sockaddr *)&server_addr);
                                         putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
                                         ssize_t serialized_query_size = TDNSGetIterQuery(parsed, found->serialized);
@@ -106,14 +108,14 @@ int main() {
                                 } else {
                                         /* b. If the record is found and the record doesn't indicate delegation, */
                                         /* send a response back */
-                                        printf("found and doesn't need delegation, sending back to og client \n");
+                                        printf("[LOCAL] found and doesn't need delegation, sending back to og client \n");
                                         delAddrQID(server_context, parsed->dh->id);
                                         delNSQID(server_context, parsed->dh->id);
                                         sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len);
                                 } 
 
                         } else {
-                                printf("wasn't found and is just sending back\n");
+                                printf("[LOCAL] wasn't found and is just sending back\n");
                                 /* c. If the record is not found, send a response back */
                                 sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len);
                         }
@@ -121,9 +123,9 @@ int main() {
                 }
         } else {
                 if(parsed->nsIP !=NULL && parsed->nsDomain!=NULL) {
-                        printf("reponse: non-authoritative (referral) \n");
-                        printf("parsed nsIP: %s\n", parsed->nsIP);
-                        printf("parsed nsDomain: %s\n", parsed->nsDomain);
+                        printf("[LOCAL] reponse: non-authoritative (referral) \n");
+                        printf("[LOCAL] parsed nsIP: %s\n", parsed->nsIP);
+                        printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
                         /* 7-1. If the message is a non-authoritative response */
                         /* (i.e., it contains referral to another nameserver) */
                         /* send an iterative query to the corresponding nameserver */
@@ -133,7 +135,7 @@ int main() {
                         ssize_t serialized_query_size = TDNSGetIterQuery(parsed, serialized);
                         putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
                 } else {
-                        printf("reponse: authoritative (final) \n");
+                        printf("[LOCAL] reponse: authoritative (final) \n");
                         /* 7. If the message is an authoritative response (i.e., it contains an answer), */
                         /* add the NS information to the response and send it to the original client */
                         /* You can retrieve the NS and client address information for the response using */

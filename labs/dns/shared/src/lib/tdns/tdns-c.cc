@@ -275,7 +275,16 @@ uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *res
   //zonename = last;
   cout << "Looking for " << dn << endl;
 
+  printf("[FIND] printing dn ");
+  std::cout << dn.toString() << std::endl;
+  printf("\n");
+
+  printf("[FIND] printing last ");
+  std::cout << last.toString() << std::endl;
+  printf("\n");
+
   if (fnd->zone) {
+    printf("[FIND] checking zone\n");
     auto node = fnd->zone->find(dn, last, false);
     cout << "Not matched: " << dn.toString() <<  endl;
     cout << "Matched: " << last <<  endl;
@@ -286,6 +295,7 @@ uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *res
       r_qname.pop_back();
     } 
     //r_qname.pop_back();
+    printf("[FIND] printing query\n");
     cout << "Response query name: " << r_qname << endl;
     DNSType r_qtype = (DNSType) response->qtype;
     DNSClass r_qclass = (DNSClass) response->qclass;
@@ -306,8 +316,20 @@ uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *res
     //   cout << "Not matched: " << dn.toString() <<  endl;
     //   cout << "Matched: " << last <<  endl;
     // }
-    
+    printf("[FIND] printing node zone b4 if: ");
+    if(node->zone) {
+      printf("[FIND] node zone not null\n");
+    } else {
+      printf("[FIND] node zone is null\n");
+    }
+    printf("\n");
+    printf("[FIND] printing compare b4 if: ");
+    printf("%d", empty.compare(dn.toString()));
+    printf("\n");
     if (node->zone && (empty.compare(dn.toString())!=0)) {
+      printf("[FIND] zone exits for node in dns:");
+      std::cout << dn.toString() << std::endl;
+      printf("\n");
       /* check if the IP is available locally */
       auto cache_node = node->zone->find(dn, last, false);
       cout << "Not matched: " << dn.toString() <<  endl;
