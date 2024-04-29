@@ -48,6 +48,7 @@ struct dnsheader {
 #define BUFFER_SIZE 2048 
 
 int main() {
+    printf("[LOCAL] in main\n");
     /* A few variable declarations that might be useful */
     /* You can add anything you want */
     int sockfd;
@@ -70,13 +71,16 @@ int main() {
     /* This context will be used for future TDNS library function calls */
     struct TDNSServerContext* server_context = TDNSInit();
     /* 4. Create the edu zone using TDNSCreateZone() */
-    TDNSCreateZone(server_context, "utexas.edu");
+    TDNSCreateZone(server_context, "edu");
     /* Add the UT nameserver ns.utexas.edu using using TDNSAddRecord() */
+    TDNSAddRecord(server_context, "edu", "utexas", NULL, "ns.utexas.edu");
+    printf("[LOCAL] done with first addrecord\n");
     /* Add an IP address for ns.utexas.edu domain using TDNSAddRecord() */
-    TDNSAddRecord(server_context, "utexas.edu", "ns", NULL, "ns.utexas.edu");
     TDNSAddRecord(server_context, "utexas.edu", "ns", "40.0.0.20", NULL);
+    printf("[LOCAL] before while loop\n");
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
         while (1) {
+        printf("[LOCAL] inside while loop\n");
         int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, &client_len); //receive message from server 
         buffer[n] = '\0';
         struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
@@ -101,10 +105,14 @@ int main() {
                                         printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
                                         printf("[LOCAL] adding addr and ns per-query context \n");
                                         putAddrQID(server_context, parsed->dh->id, (struct sockaddr *)&server_addr);
+                                        printf("[LOCAL] finished putAddrQID \n");
                                         putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
+                                        printf("[LOCAL] finished putNSQID \n");
                                         ssize_t serialized_query_size = TDNSGetIterQuery(parsed, found->serialized);
+                                        printf("[LOCAL] finished TDNSGetIterQuery \n");
                                         // TDNSFind(server_context, parsed, found)
                                         sendto(sockfd, found->serialized, serialized_query_size, 0, (struct sockaddr*)&parsed->nsDomain, client_len); 
+                                        // sendto(sockfd, found->serialized, serialized_query_size, 0, (struct sockaddr*)&client_addr, client_len); 
                                 } else {
                                         /* b. If the record is found and the record doesn't indicate delegation, */
                                         /* send a response back */
@@ -134,6 +142,7 @@ int main() {
                         char* serialized = malloc(BUFFER_SIZE);
                         ssize_t serialized_query_size = TDNSGetIterQuery(parsed, serialized);
                         putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
+                        sendto(sockfd, serialized, serialized_query_size, 0, (struct sockaddr*)&parsed->nsDomain, client_len);
                 } else {
                         printf("[LOCAL] reponse: authoritative (final) \n");
                         /* 7. If the message is an authoritative response (i.e., it contains an answer), */
@@ -150,6 +159,7 @@ int main() {
                         /* Delete a per-query context using delAddrQID() and putNSQID() */
                         delAddrQID(server_context, parsed->dh->id);
                         delNSQID(server_context, parsed->dh->id);
+                        sendto(sockfd, newMessage, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, client_len);
                 }
                 
         }     

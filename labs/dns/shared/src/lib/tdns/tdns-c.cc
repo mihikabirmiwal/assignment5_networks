@@ -156,7 +156,8 @@ void TDNSAddRecord(struct TDNSServerContext *ctx, const char *zoneurl, const cha
   if (IPv4) {
     added->addRRs(AGen::make(IPv4), AAAAGen::make("::1"));
     cout << "Its IP is " << IPv4 << endl;
-  } 
+  }
+  cout << "[ADD REC] leaving fxn\n" << endl;
 }
 void TDNSAddPTREntry (struct TDNSServerContext *ctx, const char *zone, const char *IP, const char *domain)
 {

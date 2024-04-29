@@ -42,11 +42,17 @@ int main() {
     /* Add the UTCS nameserver ns.cs.utexas.edu using using TDNSAddRecord() */
     /* implicitly creates cs.utexas.edu zone*/
     TDNSAddRecord(server_context, "utexas.edu", "cs", NULL, "ns.cs.utexas.edu");
+    printf("[UTDNS] after second add record\n");
     /* Add an IP address for ns.cs.utexas.edu domain using TDNSAddRecord() */
     TDNSAddRecord(server_context, "cs.utexas.edu", "ns", "50.0.0.30", NULL);
+    // TDNSAddRecord(server_context, "ns.cs.utexas.edu", "", "50.0.0.30", NULL);
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
+    printf("[UTDNS] before while loop\n");
     while (1) {
+        printf("[UTDNS] inside while loop\n");
+        // std::cout << "[UTDNS] cout, waiting to receive" << std::endl;
         int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, &client_len); //receive message from server 
+        printf("[UTDNS] received\n");
         buffer[n] = '\0';
         struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
         TDNSParseMsg(buffer, BUFFER_SIZE, parsed);
@@ -55,9 +61,10 @@ int main() {
         /* find the corresponding record using TDNSFind() and send the response back */
         /* Otherwise, just ignore it. */
         if (parsed->qtype == A || parsed->qtype == AAAA || parsed->qtype == NS) {
+            printf("[UTDNS] received valid query");
             struct TDNSFindResult* found = malloc(sizeof(struct TDNSFindResult));
             TDNSFind(server_context, parsed, found);
-
+            printf("[UTDNS] after TDNSFind, found->serialized %s", found->serialized);
             sendto(sockfd, found->serialized, found->len, 0, 
                 (struct sockaddr*)&client_addr, client_len); 
         }
