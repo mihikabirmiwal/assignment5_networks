@@ -156,8 +156,7 @@ void TDNSAddRecord(struct TDNSServerContext *ctx, const char *zoneurl, const cha
   if (IPv4) {
     added->addRRs(AGen::make(IPv4), AAAAGen::make("::1"));
     cout << "Its IP is " << IPv4 << endl;
-  }
-  cout << "[ADD REC] leaving fxn\n" << endl;
+  } 
 }
 void TDNSAddPTREntry (struct TDNSServerContext *ctx, const char *zone, const char *IP, const char *domain)
 {
@@ -276,12 +275,6 @@ uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *res
   //zonename = last;
   cout << "Looking for " << dn << endl;
 
-  std::cout << dn.toString() << std::endl;
-  printf("\n");
-
-  std::cout << last.toString() << std::endl;
-  printf("\n");
-
   if (fnd->zone) {
     auto node = fnd->zone->find(dn, last, false);
     cout << "Not matched: " << dn.toString() <<  endl;
@@ -313,19 +306,8 @@ uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *res
     //   cout << "Not matched: " << dn.toString() <<  endl;
     //   cout << "Matched: " << last <<  endl;
     // }
-    if(node->zone) {
-      printf("node zone not null\n");
-    } else {
-      printf("node zone is null\n");
-    }
-    printf("\n");
-    printf("[FIND] printing compare b4 if: ");
-    printf("%d", empty.compare(dn.toString()));
-    printf("\n");
+    
     if (node->zone && (empty.compare(dn.toString())!=0)) {
-      printf("[FIND] zone exits for node in dns:");
-      std::cout << dn.toString() << std::endl;
-      printf("\n");
       /* check if the IP is available locally */
       auto cache_node = node->zone->find(dn, last, false);
       cout << "Not matched: " << dn.toString() <<  endl;
@@ -523,7 +505,7 @@ ssize_t TDNSGetIterQuery (TDNSParseResult *response, char *serialized) {
 }
 uint64_t TDNSPutNStoMessage (char *message, uint64_t size, TDNSParseResult *response, const char* nsIP, const char* nsDomain)
 {
-  cout << "[TDNS] in putnstomessage " << endl;
+
   DNSName dn;
   DNSType dt;  
   std::string msg(message, size);
@@ -544,26 +526,21 @@ uint64_t TDNSPutNStoMessage (char *message, uint64_t size, TDNSParseResult *resp
   dmw.dh.qr = response->dh->qr;
   dmw.dh.opcode = response->dh->opcode;
   dmw.dh.rcode = response->dh->rcode;
-  cout << "[TDNS] wrote message " << endl;
+  
   DNSSection rrsection;
   uint32_t rrttl;
   std::unique_ptr<RRGen> rr;
-  cout << "[TDNS] before while loop " << endl;
-  // read resource records (RRs) from the incoming query message (dmr.getRR). 
-  // adds these RRs to the response message using dmw.putRR.
+      
   while(dmr.getRR(rrsection, dn, dt, rrttl, rr)) {
-    cout << "[TDNS] inside while loop, putting " << endl;
     dmw.putRR(rrsection, dn, rrttl, rr);
   }
-  cout << "[TDNS] putting authority " << endl;
+
   dmw.putRR(DNSSection::Authority, r_qname, 3600, NSGen::make(makeDNSName(nsDomain)));
-  cout << "[TDNS] putting additional " << endl; 
+
   dmw.putRR(DNSSection::Additional, makeDNSName(nsDomain), 3600, AGen::make(nsIP));
-  cout << "[TDNS] making serialized " << endl;
+
   auto serialized = dmw.serialize();
-  // message is destination buffer
   memcpy (message, serialized.c_str(), serialized.length());
-  cout << "[TDNS] message after memcpy: " << message << endl;
   return serialized.length();
 }
 
