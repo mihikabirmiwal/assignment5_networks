@@ -96,8 +96,10 @@ public:
   //! Convenience function that returns next size bytes of the message, or from pos
   std::string getBlob(int size, uint16_t* pos = 0)
   {
+    std::cout << "[GETBLOB] entered, size = " << size << std::endl;
     std::string res;
     xfrBlob(res, size, pos);
+    std::cout << "[GETBLOB] about to return" << std::endl;
     return res;
   }
   
