@@ -243,6 +243,7 @@ uint8_t TDNSParseMsg (const char *message, uint64_t size, struct TDNSParseResult
         }
       }
     }
+    cout << "[TDNS] returning" << endl;
     return TDNS_RESPONSE;
   } else {
     cout << "Unknown message type" << endl;
@@ -528,7 +529,7 @@ ssize_t TDNSGetIterQuery (TDNSParseResult *response, char *serialized) {
 }
 uint64_t TDNSPutNStoMessage (char *message, uint64_t size, TDNSParseResult *response, const char* nsIP, const char* nsDomain)
 {
-
+  cout << "[TDNS] in putnstomessage " << endl;
   DNSName dn;
   DNSType dt;  
   std::string msg(message, size);
@@ -549,19 +550,19 @@ uint64_t TDNSPutNStoMessage (char *message, uint64_t size, TDNSParseResult *resp
   dmw.dh.qr = response->dh->qr;
   dmw.dh.opcode = response->dh->opcode;
   dmw.dh.rcode = response->dh->rcode;
-  
+  cout << "[TDNS] wrote message " << endl;
   DNSSection rrsection;
   uint32_t rrttl;
   std::unique_ptr<RRGen> rr;
-      
+  cout << "[TDNS] before while loop " << endl;
   while(dmr.getRR(rrsection, dn, dt, rrttl, rr)) {
     dmw.putRR(rrsection, dn, rrttl, rr);
   }
-
+  cout << "[TDNS] putting authority " << endl;
   dmw.putRR(DNSSection::Authority, r_qname, 3600, NSGen::make(makeDNSName(nsDomain)));
-
+  cout << "[TDNS] putting additional " << endl; 
   dmw.putRR(DNSSection::Additional, makeDNSName(nsDomain), 3600, AGen::make(nsIP));
-
+  cout << "[TDNS] making serialized " << endl;
   auto serialized = dmw.serialize();
   memcpy (message, serialized.c_str(), serialized.length());
   return serialized.length();

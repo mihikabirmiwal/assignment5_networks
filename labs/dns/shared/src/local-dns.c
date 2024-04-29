@@ -101,18 +101,23 @@ int main() {
                                 printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
                                 if (parsed->nsIP != NULL){
                                         printf("[LOCAL] found and needs delegation \n");
-                                        printf("[LOCAL] parsed nsIP: %s\n", parsed->nsIP);
-                                        printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
+                                        // printf("[LOCAL] parsed nsIP: %s\n", parsed->nsIP);
+                                        // printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
                                         printf("[LOCAL] adding addr and ns per-query context \n");
                                         putAddrQID(server_context, parsed->dh->id, (struct sockaddr *)&server_addr);
                                         printf("[LOCAL] finished putAddrQID \n");
                                         putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
                                         printf("[LOCAL] finished putNSQID \n");
-                                        ssize_t serialized_query_size = TDNSGetIterQuery(parsed, found->serialized);
-                                        printf("[LOCAL] finished TDNSGetIterQuery \n");
+                                        // ssize_t serialized_query_size = TDNSGetIterQuery(parsed, found->serialized);
+                                        // printf("[LOCAL] finished TDNSGetIterQuery \n");
                                         // TDNSFind(server_context, parsed, found)
-                                        sendto(sockfd, found->serialized, serialized_query_size, 0, (struct sockaddr*)&parsed->nsDomain, client_len); 
-                                        // sendto(sockfd, found->serialized, serialized_query_size, 0, (struct sockaddr*)&client_addr, client_len); 
+                                        struct sockaddr_in dest_addr;
+                                        bzero((char*)&dest_addr, sizeof(dest_addr));
+                                        dest_addr.sin_family = AF_INET;
+                                        dest_addr.sin_port = htons(DNS_PORT);
+                                        inet_pton(AF_INET, parsed->nsIP, &dest_addr.sin_addr);
+                                        sendto(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&dest_addr, sizeof(dest_addr)); 
+                                        // sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len); 
                                 } else {
                                         /* b. If the record is found and the record doesn't indicate delegation, */
                                         /* send a response back */
@@ -151,12 +156,18 @@ int main() {
                         /* getNSbyQID() and getAddrbyQID() */
                         const char* newIP = malloc(BUFFER_SIZE);
                         const char* newDomain = malloc(BUFFER_SIZE);
-                        getNSbyQID(server_context, parsed->dh->id, newIP, newDomain);
+                        getNSbyQID(server_context, parsed->dh->id, &newIP, &newDomain);
+                        printf("[LOCAL] finished getNSbyQID \n");
                         getAddrbyQID(server_context, parsed->dh->id, (struct sockaddr *)&client_addr);
+                        printf("[LOCAL] finished getAddrbyQID \n");
                         char* newMessage = malloc(BUFFER_SIZE);
                         /* You can add the NS information to the response using TDNSPutNStoMessage() */
-                        TDNSPutNStoMessage(newMessage, BUFFER_SIZE, parsed, newIP, newDomain); // TOCHECK ip and domain NULL?
+                        printf("[LOCAL] putting ns to message \n");
+                        printf("[LOCAL] new nsIP: %s\n", newIP);
+                        printf("[LOCAL] new nsDomain: %s\n", newDomain);
+                        TDNSPutNStoMessage(buffer, BUFFER_SIZE, parsed, newIP, newDomain); // TOCHECK ip and domain NULL?
                         /* Delete a per-query context using delAddrQID() and putNSQID() */
+                        printf("[LOCAL] deleting per query context \n");
                         delAddrQID(server_context, parsed->dh->id);
                         delNSQID(server_context, parsed->dh->id);
                         sendto(sockfd, newMessage, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, client_len);

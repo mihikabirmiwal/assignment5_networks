@@ -55,7 +55,9 @@ int main() {
         printf("[UTDNS] received\n");
         buffer[n] = '\0';
         struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
+        printf("[UTDNS] b4 parsing message\n");
         TDNSParseMsg(buffer, BUFFER_SIZE, parsed);
+        printf("[UTDNS] after parsing message\n");
 
         /* 6. If it is a query for A, AAAA, NS DNS record */
         /* find the corresponding record using TDNSFind() and send the response back */
