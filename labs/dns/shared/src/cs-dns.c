@@ -42,13 +42,11 @@ int main() {
     TDNSAddRecord(server_context, "cs.utexas.edu", "aquila", "50.0.0.20", NULL);
 
     /* 5. Receive a message continuously and parse it using TDNSParseMsg() */
-    printf("[CSDNS] before while loop\n");
     while (1) {
-        printf("[CSDNS] inside while loop\n");
         int n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, &client_len); //receive message from server 
         buffer[n] = '\0';
         struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
-        TDNSParseMsg(buffer, BUFFER_SIZE, parsed);
+        TDNSParseMsg(buffer, n, parsed);
 
         /* 6. If it is a query for A, AAAA, NS DNS record */
         /* find the corresponding record using TDNSFind() and send the response back */
@@ -56,7 +54,6 @@ int main() {
         if (parsed->qtype == A || parsed->qtype == AAAA || parsed->qtype == NS) {
             struct TDNSFindResult* found = malloc(sizeof(struct TDNSFindResult));
             TDNSFind(server_context, parsed, found);
-            printf("[CSDNS] len = %d\n", found->len);
             sendto(sockfd, found->serialized, found->len, 0, 
                 (struct sockaddr*)&client_addr, client_len); 
         }
