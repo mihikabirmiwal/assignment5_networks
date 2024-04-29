@@ -66,7 +66,7 @@ int main() {
             printf("[UTDNS] received valid query");
             struct TDNSFindResult* found = malloc(sizeof(struct TDNSFindResult));
             TDNSFind(server_context, parsed, found);
-            printf("[UTDNS] after TDNSFind, found->serialized %s", found->serialized);
+            printf("[UTDNS] after TDNSFind, found->len %d\n", found->len);
             sendto(sockfd, found->serialized, found->len, 0, 
                 (struct sockaddr*)&client_addr, client_len); 
         }

@@ -320,9 +320,9 @@ uint8_t TDNSFind (struct TDNSServerContext* context, struct TDNSParseResult *res
     // }
     printf("[FIND] printing node zone b4 if: ");
     if(node->zone) {
-      printf("[FIND] node zone not null\n");
+      printf("node zone not null\n");
     } else {
-      printf("[FIND] node zone is null\n");
+      printf("node zone is null\n");
     }
     printf("\n");
     printf("[FIND] printing compare b4 if: ");
@@ -555,7 +555,10 @@ uint64_t TDNSPutNStoMessage (char *message, uint64_t size, TDNSParseResult *resp
   uint32_t rrttl;
   std::unique_ptr<RRGen> rr;
   cout << "[TDNS] before while loop " << endl;
+  // read resource records (RRs) from the incoming query message (dmr.getRR). 
+  // adds these RRs to the response message using dmw.putRR.
   while(dmr.getRR(rrsection, dn, dt, rrttl, rr)) {
+    cout << "[TDNS] inside while loop, putting " << endl;
     dmw.putRR(rrsection, dn, rrttl, rr);
   }
   cout << "[TDNS] putting authority " << endl;
@@ -564,7 +567,9 @@ uint64_t TDNSPutNStoMessage (char *message, uint64_t size, TDNSParseResult *resp
   dmw.putRR(DNSSection::Additional, makeDNSName(nsDomain), 3600, AGen::make(nsIP));
   cout << "[TDNS] making serialized " << endl;
   auto serialized = dmw.serialize();
+  // message is destination buffer
   memcpy (message, serialized.c_str(), serialized.length());
+  cout << "[TDNS] message after memcpy: " << message << endl;
   return serialized.length();
 }
 
