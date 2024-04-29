@@ -85,7 +85,7 @@ int main() {
                 buffer[n] = '\0';
                 struct TDNSParseResult* parsed = malloc(sizeof(struct TDNSParseResult));
                 // 0 if query, 1 is response
-                if(!TDNSParseMsg(buffer, BUFFER_SIZE, parsed)) { 
+                if(!TDNSParseMsg(buffer, n, parsed)) { 
                         /* 6. If it is a query for A, AAAA, NS DNS record, find the queried record using TDNSFind() */
                         /* You can ignore the other types of queries */
                         if (parsed->qtype == A || parsed->qtype == AAAA || parsed->qtype == NS) {
@@ -108,28 +108,20 @@ int main() {
                                                 printf("[LOCAL] finished putAddrQID \n");
                                                 putNSQID(server_context, parsed->dh->id, parsed->nsIP, parsed->nsDomain);
                                                 printf("[LOCAL] finished putNSQID \n");
-                                                // ssize_t serialized_query_size = TDNSGetIterQuery(parsed, found->serialized);
-                                                // printf("[LOCAL] finished TDNSGetIterQuery \n");
-                                                // TDNSFind(server_context, parsed, found)
                                                 struct sockaddr_in dest_addr;
                                                 bzero((char*)&dest_addr, sizeof(dest_addr));
                                                 dest_addr.sin_family = AF_INET;
                                                 dest_addr.sin_port = htons(DNS_PORT);
                                                 inet_pton(AF_INET, parsed->nsIP, &dest_addr.sin_addr);
-                                                printf("[LOCAL] query + delegation, sendtosize %ld\n", BUFFER_SIZE);
-                                                sendto(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&dest_addr, sizeof(dest_addr)); 
+                                                sendto(sockfd, buffer, n, 0, (struct sockaddr*)&dest_addr, sizeof(dest_addr)); 
                                                 // sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len); 
                                         } else {
                                                 /* b. If the record is found and the record doesn't indicate delegation, */
                                                 /* send a response back */
-                                                printf("[LOCAL] found and doesn't need delegation, sending back to og client, found->len = %d \n", found->len);
-                                                // delAddrQID(server_context, parsed->dh->id);
-                                                // delNSQID(server_context, parsed->dh->id);
                                                 sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len);
                                         } 
 
                                 } else {
-                                        printf("[LOCAL] wasn't found and is just sending back. found->len: %d\n", found->len);
                                         /* c. If the record is not found, send a response back */
                                         sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len);
                                 }
@@ -137,9 +129,6 @@ int main() {
                         }
                 } else {
                         if(parsed->nsIP !=NULL && parsed->nsDomain!=NULL) {
-                                printf("[LOCAL] reponse: non-authoritative (referral) \n");
-                                printf("[LOCAL] parsed nsIP: %s\n", parsed->nsIP);
-                                printf("[LOCAL] parsed nsDomain: %s\n", parsed->nsDomain);
                                 /* 7-1. If the message is a non-authoritative response */
                                 /* (i.e., it contains referral to another nameserver) */
                                 /* send an iterative query to the corresponding nameserver */
@@ -179,7 +168,7 @@ int main() {
                                 printf("[LOCAL] deleting per query context \n");
                                 delAddrQID(server_context, parsed->dh->id);
                                 delNSQID(server_context, parsed->dh->id);
-                                printf("[LOCAL] response + auth BUFFERSIZE : %d\n", BUFFER_SIZE);
+                                printf("[LOCAL] response + auth updated_len : %d\n", updated_len);
                                 sendto(sockfd, buffer, updated_len, 0, (struct sockaddr*)&client_addr, client_len);
                         }
                         
