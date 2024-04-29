@@ -173,14 +173,14 @@ int main() {
                                 printf("[LOCAL] new nsIP: %s\n", newIP);
                                 printf("[LOCAL] new nsDomain: %s\n", newDomain);
                                 printf("[LOCAL] buffer %s\n", buffer);
-                                uint64_t updated_len = TDNSPutNStoMessage(buffer, BUFFER_SIZE, parsed, newIP, newDomain); // line where we are having issue
+                                uint64_t updated_len = TDNSPutNStoMessage(buffer, n, parsed, newIP, newDomain); // line where we are having issue
                                 printf("[LOCAL] updated_len: %ld\n", updated_len);
                                 /* Delete a per-query context using delAddrQID() and putNSQID() */
                                 printf("[LOCAL] deleting per query context \n");
                                 delAddrQID(server_context, parsed->dh->id);
                                 delNSQID(server_context, parsed->dh->id);
                                 printf("[LOCAL] response + auth BUFFERSIZE : %d\n", BUFFER_SIZE);
-                                sendto(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr*)&client_addr, client_len);
+                                sendto(sockfd, buffer, updated_len, 0, (struct sockaddr*)&client_addr, client_len);
                         }
                         
                 }     

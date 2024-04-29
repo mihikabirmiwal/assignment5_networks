@@ -100,7 +100,7 @@ bool DNSMessageReader::getRR(DNSSection& section, DNSName& name, DNSType& type, 
   /* uint16_t lclass = */ getUInt16(); // class
   xfrUInt32(ttl);
   auto len = getUInt16();
-  cout << "[GETRR] len = " << len << endl;
+  // cout << "[GETRR] len = " << len << endl;
   d_endofrecord = payloadpos + len;
   // this should care about RP, AFSDB too (RFC3597).. if anyone cares
 #define CONVERT(x) if(type == DNSType::x) { cout << "[GETRR] convert if before" << endl; content = std::make_unique<x##Gen>(*this); cout << "[GETRR] convert if after" << endl;} else
@@ -109,12 +109,12 @@ bool DNSMessageReader::getRR(DNSSection& section, DNSName& name, DNSType& type, 
   CONVERT(TXT) CONVERT(RRSIG)
   CONVERT(PTR) 
   {
-    cout << "[GETRR] convert else before" << endl;
+    // cout << "[GETRR] convert else before" << endl;
     content = std::make_unique<UnknownGen>(type, getBlob(len));
-    cout << "[GETRR] convert else after" << endl;
+    // cout << "[GETRR] convert else after" << endl;
   }
 #undef CONVERT
-  cout << "[GETRR] done with convert def" << endl;
+  // cout << "[GETRR] done with convert def" << endl;
   return true;
 }
 
