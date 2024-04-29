@@ -54,8 +54,7 @@ int main() {
         if (parsed->qtype == A || parsed->qtype == AAAA || parsed->qtype == NS) {
             struct TDNSFindResult* found = malloc(sizeof(struct TDNSFindResult));
             TDNSFind(server_context, parsed, found);
-            sendto(sockfd, found->serialized, found->len, 0, 
-                (struct sockaddr*)&client_addr, client_len); 
+            sendto(sockfd, found->serialized, found->len, 0, (struct sockaddr*)&client_addr, client_len); 
         }
     }
 
